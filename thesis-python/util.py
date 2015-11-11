@@ -41,13 +41,29 @@ def randomSpanningTree(N):
         
     return A
     
-def gnp(N, p, connected = True):
+
+def meanDegree(A):
+    """Calculates the mean degree of a graph.
+    
+    Args:
+        A (NxN numpy array): The adjacency matrix of the graph
+    
+    Returns:
+        The mean degree of the graph.
+    """
+    
+    A[A > 0] = 1
+    degrees = A.sum(axis=1)
+    return np.mean(degrees)
+    
+def gnp(N, p, print_degree = False):
     """Constructs an undirected connected G(N, p) network with random weights.
     
     Args:
         N (int): Number of nodes
         p (double): The probability that each vertice is created
-    
+        print_degree (bool): Choose whether to print the size and the mean 
+            degree of the network
     Returns:
         A NxN numpy array representing the adjacency matrix of the graph.
     """
@@ -61,8 +77,9 @@ def gnp(N, p, connected = True):
                 w = rand.random()
                 A[i, j] = w
                 A[j, i] = w
-                
-    
+           
+    if print_degree:
+        print('G(N,p) Network Created: N = {N}, Mean Degree = {deg}'.format(N=N,deg=meanDegree(A)))
     return A
     
 

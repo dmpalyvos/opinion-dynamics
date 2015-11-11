@@ -5,18 +5,12 @@ import seaborn as sns
 
 import models
 from util import *
-    
-def main():
-
-    N = 15
-    s = rand.random(N)
-    sns.distplot(s,bins=10,kde=False)
-    plt.show()
-    A = gnp(N,0.3)
-
-    models.friedkinJohnsen(A, s, 100, plot = True)
 
 
-if __name__ == "__main__":
-    main()
+N = 100
+rand.seed(123)
+s = rand.random(N)
+A = gnp(N,0.2,print_degree=True)
+models.deGroot(A, s, 10000, plot = True)
+
 

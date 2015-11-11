@@ -19,22 +19,22 @@ def deGroot(A, s, maxRounds, eps = 1e-6, plot = False):
         plot (bool): Plot preference (default: False)
         
     Returns:
-        A 1xN vector containing the final opinions of the nodes
+        A txN vector of the opinions of the nodes over time
         
     """
+    
     # Preprocess A
     A = rowStochastic(A)
     
     N = len(s)
     maxRounds += 1 # Round 0 contains the initial opinions
     x = s
-    opinions = np.zeros((maxRounds, N)) if plot else None
+    opinions = np.zeros((maxRounds, N))
     opinions[0,:] = s
     
     for t in range(0,maxRounds):
         x = np.dot(A, x)
-        if plot:
-            opinions[t,:] = x
+        opinions[t,:] = x
         if norm(opinions[t-1,:] - opinions[t,:], np.inf) < eps:
             print('DeGroot converged after {t} rounds'.format(t=t))
             break
@@ -42,7 +42,9 @@ def deGroot(A, s, maxRounds, eps = 1e-6, plot = False):
     if plot:
         plotOpinions(opinions[0:t,:],'DeGroot')
     
-    return opinions[t,:]
+    return opinions
+    
+
     
 def friedkinJohnsen(A, s, maxRounds, eps = 1e-6, plot = False):
     """Simulates the Friedkin-Johnsen (Kleinberg) Model.
@@ -62,7 +64,7 @@ def friedkinJohnsen(A, s, maxRounds, eps = 1e-6, plot = False):
         plot (bool): Plot preference (default: False)
         
     Returns:
-        A 1xN vector containing the final opinions of the nodes
+        A txN vector of the opinions of the nodes over time
         
     """
 
@@ -73,18 +75,17 @@ def friedkinJohnsen(A, s, maxRounds, eps = 1e-6, plot = False):
     N = len(s)
     maxRounds += 1 # Round 0 contains the initial opinions
     x = s
-    opinions = np.zeros((maxRounds, N)) if plot else None
+    opinions = np.zeros((maxRounds, N))
     opinions[0,:] = s
     
     for t in range(0, maxRounds):
         x = np.dot(A, x) + np.dot(B, s)
-        if plot:
-            opinions[t,:] = x
+        opinions[t,:] = x
         if norm(opinions[t-1,:] - opinions[t,:], np.inf) < eps:
-            print('DeGroot converged after {t} rounds'.format(t=t))
+            print('Friedkin-Johnsen converged after {t} rounds'.format(t=t))
             break
     
     if plot:
         plotOpinions(opinions[0:t,:],'DeGroot')
     
-    return opinions[t,:]
+    return opinions
