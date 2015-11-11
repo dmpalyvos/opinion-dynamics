@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import numpy.random as rand
+import seaborn as sns
+
 import models
+from util import *
     
 def main():
-    A = np.array([[0.2, 0.6, 0.2],
-                  [0.7, 0.1, 0.2],
-                  [0.4, 0.3, 0.3]])
-                  
-    x = np.array([0.1, 0.5, 1])
 
-    models.deGroot(A, x, 100, plot = True)
+    N = 15
+    s = rand.random(N)
+    sns.distplot(s,bins=10,kde=False)
+    plt.show()
+    A = gnp(N,0.3)
+
+    models.friedkinJohnsen(A, s, 100, plot = True)
 
 
 if __name__ == "__main__":
