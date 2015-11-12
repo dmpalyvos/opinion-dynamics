@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import seaborn as sns
 import numpy.random as rand
 
@@ -49,7 +50,7 @@ def rowStochastic(A):
     return A/A.sum(axis=1, keepdims = True)
     
     
-def randomSpanningTree(N):
+def randomSpanningTree(N, rand_weights = False):
     """Creats a graph of N nodes connected by a random spanning tree.
     
     Args:
@@ -63,7 +64,7 @@ def randomSpanningTree(N):
     A = np.zeros((N, N))
     
     for i in range(1, N):
-        w = rand.random()
+        w = rand.random() if rand_weights else 1
         A[nodes[i-1],nodes[i]] = w
         A[nodes[i],nodes[i-1]] = w
 
@@ -84,13 +85,13 @@ def meanDegree(A):
     degrees = B.sum(axis=1)
     return np.mean(degrees)
     
-def gnp(N, p, print_degree = False):
+def gnp(N, p, rand_weights = False, verbose = False):
     """Constructs an undirected connected G(N, p) network with random weights.
     
     Args:
         N (int): Number of nodes
         p (double): The probability that each vertice is created
-        print_degree (bool): Choose whether to print the size and the mean 
+        verbose (bool): Choose whether to print the size and the mean 
             degree of the network
     Returns:
         A NxN numpy array representing the adjacency matrix of the graph.
@@ -101,29 +102,37 @@ def gnp(N, p, print_degree = False):
         for j in range(N):
             r = rand.random()
             if r < p:
-                w = rand.random()
+                w = rand.random() if rand_weights else 1
                 A[i, j] = w
                 A[j, i] = w
                 
-    if print_degree:
-        print('G(N,p) Network Created: N = {N}, Mean Degree = {deg}'.format(N=N,deg=meanDegree(A)))
+    if verbose:
+        print('G(N,p) Network Created: N = {N}, Mean Degree = {deg}'.format(N = N, deg = meanDegree(A)))
         
     return A
     
 
-def plotOpinions(opinions, title=''):
+def plotOpinions(opinions, title='', dcolor = False):
     """Creates a plot of the opinions over time
     
     Args:
         opinions (txN vector): Vector of the opinions over time
         title (string): Optional title of the plot (default: '')
+        dcolor (bool): Color the plot lines depending on the value of 
+        each opinion (default: False)
     
     """
-    maxRounds = np.shape(opinions)[0]
-    opinionNumber = np.shape(opinions)[1]
-    for t in range(0,opinionNumber):
-        plt.plot(range(0,maxRounds),opinions[:,t], linewidth = 0.5)
+    max_rounds = np.shape(opinions)[0]
+    opinion_number = np.shape(opinions)[1]
+    for t in range(0, opinion_number):
+        x = range(0, max_rounds)
+        y = opinions[:,t]
+        if dcolor:
+            plt.scatter(x, y, c = cm.winter(y), edgecolor='none')
+        else:
+            plt.plot(range(0, max_rounds), opinions[:,t])
     plt.ylabel('Opinion')
     plt.xlabel('t')
     plt.title(title)
+    plt.axis((0, max_rounds, opinions.min() - 0.1, opinions.max() + 0.1))
     plt.show()
