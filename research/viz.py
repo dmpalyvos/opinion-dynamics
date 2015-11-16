@@ -23,14 +23,15 @@ def plotOpinions(opinions, title='', dcolor=False):
     
     max_rounds = np.shape(opinions)[0]
     opinion_number = np.shape(opinions)[1]
-    for t in range(0, opinion_number):
-        x = range(0, max_rounds)
+    for t in range(opinion_number):
+        x = range(max_rounds)
         y = opinions[:,t]
         if dcolor:
-            colorline(range(max_rounds), opinions[:,t], z=opinions[:,t])
+            (x,y) = highResPoints(x, y, factor=2)
+            colorline(x,y, z=y)
             pass
         else:
-            plt.plot(range(max_rounds), opinions[:,t])
+            plt.plot(x, y)
     plt.ylabel('Opinion')
     plt.xlabel('t')
     plt.title(title)
@@ -120,3 +121,56 @@ def clear_frame(ax=None):
 End Colorline
 '''
 
+'''
+Begin Highrespoints
+Adapted from: http://stackoverflow.com/a/8505774
+'''
+def highResPoints(x, y, factor=10):
+    '''
+    Take points listed in two vectors and return them at a higher
+    resultion. Create at least factor*len(x) new points that include the
+    original points and those spaced in between.
+
+    Returns new x and y arrays as a tuple (x,y).
+    '''
+
+    NPOINTS = np.size(x)
+    # r is the distance spanned between pairs of points
+    r = [0]
+    for i in range(1,len(x)):
+        dx = x[i]-x[i-1]
+        dy = y[i]-y[i-1]
+        r.append(np.sqrt(dx*dx+dy*dy))
+    r = np.array(r)
+
+    # rtot is a cumulative sum of r, it's used to save time
+    rtot = []
+    for i in range(len(r)):
+        rtot.append(r[0:i].sum())
+    rtot.append(r.sum())
+
+    dr = rtot[-1]/(NPOINTS*factor-1)
+    xmod=[x[0]]
+    ymod=[y[0]]
+    rPos = 0 # current point on walk along data
+    rcount = 1 
+    while rPos < r.sum():
+        x1,x2 = x[rcount-1],x[rcount]
+        y1,y2 = y[rcount-1],y[rcount]
+        dpos = rPos-rtot[rcount] 
+        theta = np.arctan2((x2-x1),(y2-y1))
+        rx = np.sin(theta)*dpos+x1
+        ry = np.cos(theta)*dpos+y1
+        xmod.append(rx)
+        ymod.append(ry)
+        rPos+=dr
+        while rPos > rtot[rcount+1]:
+            rPos = rtot[rcount+1]
+            rcount+=1
+            if rcount>rtot[-1]:
+                break
+
+    return xmod,ymod
+    
+'''End Highrespoints'''
+#CONSTANTS
