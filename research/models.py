@@ -12,16 +12,23 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     allows for lower memory consumption and faster runtime.
     
     Args:
+    
         A (NxN numpy array): Adjacency matrix
+        
         s (1xN numpy array): Initial opinions vector
+        
         max_rounds (int): Maximum number of rounds to simulate 
+        
         eps (double): Maximum difference between rounds before we assume that 
         the model has converged (default: 1e-6)
+        
         plot (bool): Plot preference (default: False)
+        
         conv_stop (bool): Stop the simulation if the model has converged 
         (default: True)
         
     Returns:
+    
         A txN vector of the opinions of the nodes over time
         
     '''
@@ -57,16 +64,23 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     matrix A.
     
     Args:
+    
         A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+        
         s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
+        
         max_rounds (int): Maximum number of rounds to simulate 
+        
         eps (double): Maximum difference between rounds before we assume that 
         the model has converged (default: 1e-6)
+        
         plot (bool): Plot preference (default: False)
+        
         conv_stop (bool): Stop the simulation if the model has converged 
         (default: True)
         
     Returns:
+    
         A txN vector of the opinions of the nodes over time
         
     '''

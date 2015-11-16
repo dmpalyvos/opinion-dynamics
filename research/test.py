@@ -10,4 +10,4 @@ from viz import plotDistance
 
 N = 1000
 s = rand.rand(N)
-hk(s,0.1,1e3,1e-5,plot=True)
+hk(s,0.11,1e3,1e-5,plot=True)

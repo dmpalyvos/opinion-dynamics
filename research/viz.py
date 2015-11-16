@@ -11,8 +11,11 @@ def plotOpinions(opinions, title='', dcolor=False):
     '''Creates a plot of the opinions over time
     
     Args:
+    
         opinions (txN vector): Vector of the opinions over time
+        
         title (string): Optional title of the plot (default: '')
+        
         dcolor (bool): Color the plot lines depending on the value of 
         each opinion (default: False)
     
@@ -42,8 +45,11 @@ def plotDistance(A, s, opinions):
     Friedkin-Johnsen model over time.
     
     Args:
+    
         A (NxN numpy array): Adjacency Matrix
+        
         s (1xN numpy array): Intrinsic beliefs vector
+        
         opinions (txN vector): Vector of the opinions over time
     
     '''
@@ -113,3 +119,4 @@ def clear_frame(ax=None):
 '''
 End Colorline
 '''
+

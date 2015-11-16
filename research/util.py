@@ -16,9 +16,11 @@ def rchoice(weights):
     is 30%.
     
     Args:
+    
         weights (1xN array): The vector with the probability of each index
     
     Returns:
+    
         The randomly chosen index
     '''
     
@@ -40,9 +42,11 @@ def rowStochastic(A):
     stochastic, meaning that each of its rows sums to 1.
     
     Args: 
+    
         A (NxN numpy array): The matrix to be converted
     
     Returns:
+    
         A NxN numpy array which is row stochastic.
     '''
     
@@ -53,10 +57,13 @@ def randomSpanningTree(N, rand_weights=False):
     '''Creats a graph of N nodes connected by a random spanning tree.
     
     Args:
+    
         N (int): Number of nodes
     
     Returns:
+    
         A NxN numpy array representing the adjacency matrix of the graph.
+        
     '''
 
     nodes = rand.permutation(N)
@@ -73,10 +80,13 @@ def meanDegree(A):
     '''Calculates the mean degree of a graph.
     
     Args:
+    
         A (NxN numpy array): The adjacency matrix of the graph
     
     Returns:
+    
         The mean degree of the graph.
+        
     '''
     B = np.empty_like(A)
     np.copyto(B,A)
@@ -88,11 +98,16 @@ def gnp(N, p, rand_weights=False, stochastic=False, verbose=False):
     '''Constructs an undirected connected G(N, p) network with random weights.
     
     Args:
+    
         N (int): Number of nodes
+        
         p (double): The probability that each vertice is created
+        
         verbose (bool): Choose whether to print the size and the mean 
             degree of the network
+            
     Returns:
+    
         A NxN numpy array representing the adjacency matrix of the graph.
     '''
     
@@ -117,10 +132,13 @@ def expectedEquilibrium(A, s):
     '''Calculates the equilibrium of the Friedkin-Johnsen Model
     
     Args:
+    
         A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+        
         s (1xN numpy array): Intrinsic beliefs vector
     
     Returns:
+    
         ((I-A)^-1)Bs
     
     '''
