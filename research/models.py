@@ -33,7 +33,7 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     opinions = np.zeros((max_rounds, N))
     opinions[0,:] = s
     
-    for t in range(0,max_rounds):
+    for t in range(max_rounds):
         x = np.dot(A, x)
         opinions[t,:] = x
         if conv_stop and norm(opinions[t - 1,:] - opinions[t,:], np.inf) < eps:
@@ -82,7 +82,7 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     opinions = np.zeros((max_rounds, N))
     opinions[0,:] = s
     
-    for t in range(0, max_rounds):
+    for t in range(max_rounds):
         x = np.dot(A_model, x) + np.dot(B, s)
         opinions[t,:] = x
         if conv_stop and norm(opinions[t - 1,:] - opinions[t,:], np.inf) < eps:
@@ -91,5 +91,28 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     
     if plot:
         plotOpinions(opinions[0:t,:], 'Friedkin-Johnsen')
+    
+    return opinions[0:t,:]
+    
+def hk(s, op_eps, max_rounds, eps, plot=False, conv_stop=True):
+    max_rounds = int(max_rounds)
+    N = len(s)
+    max_rounds += 1 # Round 0 contains the initial opinions
+    x = s
+    x_prev = x
+    opinions = np.zeros((max_rounds, N))
+    for t in range(max_rounds):
+        Q = np.zeros((N,N))
+        for i in range(N):
+            neighbors_i = np.abs(x_prev - x_prev[i]) <= op_eps
+            Q[i,neighbors_i] = 1
+            x[i] = np.mean(x_prev[neighbors_i])
+        opinions[t,:] = x
+        if conv_stop and norm(opinions[t - 1,:] - opinions[t,:], np.inf) < eps:
+            print('Hegselmann-Krause converged after {t} rounds'.format(t=t))
+            break
+    
+    if plot:
+        plotOpinions(opinions[0:t,:], 'Hegselmann-Krause',dcolor=True)
     
     return opinions[0:t,:]
