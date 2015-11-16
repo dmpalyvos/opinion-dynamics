@@ -2,9 +2,10 @@
 import numpy as np
 from numpy.linalg import norm, inv
 from util import *
+from viz import plotOpinions
 
 def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
-    """Simulates the DeGroot Model.
+    '''Simulates the DeGroot Model.
     
     Runs a maximum of max_rounds rounds of the DeGroot model. If the model 
     converges sooner, the function returns. Chosing not to plot the opinions
@@ -23,7 +24,7 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     Returns:
         A txN vector of the opinions of the nodes over time
         
-    """
+    '''
     max_rounds = int(max_rounds)
     
     N = len(s)
@@ -47,7 +48,7 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
     
 def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
-    """Simulates the Friedkin-Johnsen (Kleinberg) Model.
+    '''Simulates the Friedkin-Johnsen (Kleinberg) Model.
     
     Runs a maximum of max_rounds rounds of the Friedkin-Jonsen model. If the 
     model converges sooner, the function returns. Chosing not to plot the 
@@ -68,7 +69,7 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     Returns:
         A txN vector of the opinions of the nodes over time
         
-    """
+    '''
     max_rounds = int(max_rounds)
 
     # Preprocess A and extract stubborness matrix B

@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import matplotlib.pyplot as plt
-from numpy.linalg import norm, inv
-from matplotlib import cm
-import seaborn as sns
 import numpy.random as rand
 
+from numpy.linalg import norm, inv
+
 def rchoice(weights):
-    """Makes a (weighted) random choice.
+    '''Makes a (weighted) random choice.
     
     Given a vector of probabilities with a total sum of 1, this function 
     returns the index of one element of the list with probability equal to 
@@ -22,7 +20,7 @@ def rchoice(weights):
     
     Returns:
         The randomly chosen index
-    """
+    '''
     
     positive_probs = np.nonzero(weights)[0]
     s = 0.0
@@ -36,7 +34,7 @@ def rchoice(weights):
     raise RuntimeError('Failed to make a random choice. Check input vector.')
 
 def rowStochastic(A):
-    """Makes a matrix row (right) stochastic.
+    '''Makes a matrix row (right) stochastic.
     
     Given a real square matrix, returns a new matrix which is right 
     stochastic, meaning that each of its rows sums to 1.
@@ -46,20 +44,20 @@ def rowStochastic(A):
     
     Returns:
         A NxN numpy array which is row stochastic.
-    """
+    '''
     
     return A / A.sum(axis=1, keepdims = True)
     
     
 def randomSpanningTree(N, rand_weights=False):
-    """Creats a graph of N nodes connected by a random spanning tree.
+    '''Creats a graph of N nodes connected by a random spanning tree.
     
     Args:
         N (int): Number of nodes
     
     Returns:
         A NxN numpy array representing the adjacency matrix of the graph.
-    """
+    '''
 
     nodes = rand.permutation(N)
     A = np.zeros((N, N))
@@ -72,14 +70,14 @@ def randomSpanningTree(N, rand_weights=False):
     return A
     
 def meanDegree(A):
-    """Calculates the mean degree of a graph.
+    '''Calculates the mean degree of a graph.
     
     Args:
         A (NxN numpy array): The adjacency matrix of the graph
     
     Returns:
         The mean degree of the graph.
-    """
+    '''
     B = np.empty_like(A)
     np.copyto(B,A)
     B[B > 0] = 1
@@ -87,7 +85,7 @@ def meanDegree(A):
     return np.mean(degrees)
     
 def gnp(N, p, rand_weights=False, stochastic=False, verbose=False):
-    """Constructs an undirected connected G(N, p) network with random weights.
+    '''Constructs an undirected connected G(N, p) network with random weights.
     
     Args:
         N (int): Number of nodes
@@ -96,7 +94,7 @@ def gnp(N, p, rand_weights=False, stochastic=False, verbose=False):
             degree of the network
     Returns:
         A NxN numpy array representing the adjacency matrix of the graph.
-    """
+    '''
     
     A = randomSpanningTree(N)
     for i in range(N):
@@ -114,36 +112,9 @@ def gnp(N, p, rand_weights=False, stochastic=False, verbose=False):
         A = rowStochastic(A)
         
     return A
-
-def plotOpinions(opinions, title='', dcolor=False):
-    """Creates a plot of the opinions over time
-    
-    Args:
-        opinions (txN vector): Vector of the opinions over time
-        title (string): Optional title of the plot (default: '')
-        dcolor (bool): Color the plot lines depending on the value of 
-        each opinion (default: False)
-    
-    """
-    
-    max_rounds = np.shape(opinions)[0]
-    opinion_number = np.shape(opinions)[1]
-    for t in range(0, opinion_number):
-        x = range(0, max_rounds)
-        y = opinions[:,t]
-        if dcolor:
-            # Use colorline
-            pass
-        else:
-            plt.plot(range(0, max_rounds), opinions[:,t])
-    plt.ylabel('Opinion')
-    plt.xlabel('t')
-    plt.title(title)
-    plt.axis((0, max_rounds, opinions.min() - 0.1, opinions.max() + 0.1))
-    plt.show()
     
 def expectedEquilibrium(A, s):
-    """Calculates the equilibrium of the Friedkin-Johnsen Model
+    '''Calculates the equilibrium of the Friedkin-Johnsen Model
     
     Args:
         A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
@@ -152,27 +123,10 @@ def expectedEquilibrium(A, s):
     Returns:
         ((I-A)^-1)Bs
     
-    """
+    '''
     
     N = np.shape(A)[0]    
     B = np.diag(np.diag(A))
     
     return np.dot(np.dot(inv(np.eye(N) - (A - B)), B), s)
-    
-def plotDistance(A, s, opinions):
-    """Plot the distance of the opinions from the expected equilibrium
-    
-    Creates a plot of the distance from the expected equilibrium of the
-    Friedkin-Johnsen model over time.
-    
-    Args:
-        A (NxN numpy array): Adjacency Matrix
-        s (1xN numpy array): Intrinsic beliefs vector
-        opinions (txN vector): Vector of the opinions over time
-    
-    """
-
-    eq = expectedEquilibrium(A, s)
-    dist = norm(opinions - eq, axis=1)
-    plt.plot(range(dist.size),dist)
     
