@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from numpy.linalg import norm
+from numpy.linalg import norm, inv
 from util import *
 
 def deGroot(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True):
@@ -24,7 +24,7 @@ def deGroot(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True):
         A txN vector of the opinions of the nodes over time
         
     """
-    
+    max_rounds = int(max_rounds)
     # Preprocess A
     A = rowStochastic(A)
     
@@ -71,11 +71,12 @@ def friedkinJohnsen(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True
         A txN vector of the opinions of the nodes over time
         
     """
+    max_rounds = int(max_rounds)
 
     # Preprocess A and extract stubborness matrix B
     A = rowStochastic(A)
-    B = np.diag(np.diag(A))
-    A = A - B
+    B = np.diag(np.diag(A)) # B matrix of the model
+    A_model = A - B # Adjacency matrix of the model
     
     N = len(s)
     max_rounds += 1 # Round 0 contains the initial opinions
@@ -84,7 +85,7 @@ def friedkinJohnsen(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True
     opinions[0,:] = s
     
     for t in range(0, max_rounds):
-        x = np.dot(A, x) + np.dot(B, s)
+        x = np.dot(A_model, x) + np.dot(B, s)
         opinions[t,:] = x
         if conv_stop and norm(opinions[t-1,:] - opinions[t,:], np.inf) < eps:
             print('Friedkin-Johnsen converged after {t} rounds'.format(t=t))
@@ -93,4 +94,22 @@ def friedkinJohnsen(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True
     if plot:
         plotOpinions(opinions[0:t,:], 'Friedkin-Johnsen')
     
-    return opinions
+    return opinions[0:t,:]
+
+
+def fjEquilibrium(A, s):
+    """Calculates the equilibrium of the Friedkin-Johnsen Model
+    
+    Args:
+        A (NxN numpy array): Adjacency matrix
+        s (1xN numpy array): Intrinsic beliefs vector
+    
+    Returns:
+        ((I-A)^-1)Bs
+    
+    """
+    
+    N = np.shape(A)[0]    
+    B = np.diag(np.diag(A))
+    
+    return np.dot(inv(np.eye(N)-(A-B)),s)

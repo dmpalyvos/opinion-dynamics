@@ -2,13 +2,22 @@
 import numpy as np
 import numpy.random as rand
 import seaborn as sns
+from numpy.linalg import norm, inv
 
-import models
+from models import *
 from util import *
 
-#rand.seed(223)
-N = 20
-A = gnp(N,0.7,rand_weights=True)
-A = A - 0.*np.diag(np.diag(A))
+
+N = 8
+A = gnp(N, 0.5, rand_weights=True)
 s = rand.rand(N)
-models.friedkinJohnsen(A,s,300,plot=True)
+
+opinions = friedkinJohnsen(A, s, 1e3,plot = True)
+fj_eq = fjEquilibrium(A,s)
+
+dist = norm(opinions - fj_eq, ord = np.inf, axis = 1)
+plt.plot(range(len(dist)),dist)
+
+for i in fj_eq:
+    plt.axhline(y=i)
+print opinions[-1,:] - fj_eq
