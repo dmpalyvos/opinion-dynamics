@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy.linalg import norm, inv
 from matplotlib import cm
 import seaborn as sns
 import numpy.random as rand
@@ -85,7 +86,7 @@ def meanDegree(A):
     degrees = B.sum(axis=1)
     return np.mean(degrees)
     
-def gnp(N, p, rand_weights=False, verbose=False):
+def gnp(N, p, rand_weights=False, stochastic=False, verbose=False):
     """Constructs an undirected connected G(N, p) network with random weights.
     
     Args:
@@ -108,9 +109,11 @@ def gnp(N, p, rand_weights=False, verbose=False):
                 
     if verbose:
         print('G(N,p) Network Created: N = {N}, Mean Degree = {deg}'.format(N = N, deg = meanDegree(A)))
+    
+    if stochastic:
+        A = rowStochastic(A)
         
     return A
-    
 
 def plotOpinions(opinions, title='', dcolor=False):
     """Creates a plot of the opinions over time
@@ -122,13 +125,15 @@ def plotOpinions(opinions, title='', dcolor=False):
         each opinion (default: False)
     
     """
+    
     max_rounds = np.shape(opinions)[0]
     opinion_number = np.shape(opinions)[1]
     for t in range(0, opinion_number):
         x = range(0, max_rounds)
         y = opinions[:,t]
         if dcolor:
-            plt.scatter(x, y, c = cm.winter(y), edgecolor='none')
+            # Use colorline
+            pass
         else:
             plt.plot(range(0, max_rounds), opinions[:,t])
     plt.ylabel('Opinion')
@@ -136,3 +141,38 @@ def plotOpinions(opinions, title='', dcolor=False):
     plt.title(title)
     plt.axis((0, max_rounds, opinions.min() - 0.1, opinions.max() + 0.1))
     plt.show()
+    
+def expectedEquilibrium(A, s):
+    """Calculates the equilibrium of the Friedkin-Johnsen Model
+    
+    Args:
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+        s (1xN numpy array): Intrinsic beliefs vector
+    
+    Returns:
+        ((I-A)^-1)Bs
+    
+    """
+    
+    N = np.shape(A)[0]    
+    B = np.diag(np.diag(A))
+    
+    return np.dot(np.dot(inv(np.eye(N) - (A - B)), B), s)
+    
+def plotDistance(A, s, opinions):
+    """Plot the distance of the opinions from the expected equilibrium
+    
+    Creates a plot of the distance from the expected equilibrium of the
+    Friedkin-Johnsen model over time.
+    
+    Args:
+        A (NxN numpy array): Adjacency Matrix
+        s (1xN numpy array): Intrinsic beliefs vector
+        opinions (txN vector): Vector of the opinions over time
+    
+    """
+
+    eq = expectedEquilibrium(A, s)
+    dist = norm(opinions - eq, axis=1)
+    plt.plot(range(dist.size),dist)
+    

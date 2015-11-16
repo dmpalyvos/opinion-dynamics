@@ -25,8 +25,6 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
         
     """
     max_rounds = int(max_rounds)
-    # Preprocess A
-    A = rowStochastic(A)
     
     N = len(s)
     max_rounds += 1 # Round 0 contains the initial opinions
@@ -58,7 +56,7 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     matrix A.
     
     Args:
-        A (NxN numpy array): Adjacency matrix
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
         s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
         max_rounds (int): Maximum number of rounds to simulate 
         eps (double): Maximum difference between rounds before we assume that 
@@ -74,8 +72,7 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     max_rounds = int(max_rounds)
 
     # Preprocess A and extract stubborness matrix B
-    A = rowStochastic(A)
-    B = np.diag(np.diag(A)) # B matrix of the model
+    B = np.diag(np.diag(A)) # Stubborness matrix of the model
     A_model = A - B # Adjacency matrix of the model
     
     N = len(s)
@@ -95,21 +92,3 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
         plotOpinions(opinions[0:t,:], 'Friedkin-Johnsen')
     
     return opinions[0:t,:]
-
-
-def fjEquilibrium(A, s):
-    """Calculates the equilibrium of the Friedkin-Johnsen Model
-    
-    Args:
-        A (NxN numpy array): Adjacency matrix
-        s (1xN numpy array): Intrinsic beliefs vector
-    
-    Returns:
-        ((I-A)^-1)Bs
-    
-    """
-    
-    N = np.shape(A)[0]    
-    B = np.diag(np.diag(A))
-    
-    return np.dot(np.dot(inv(np.eye(N) - (A - B)), B), s)
