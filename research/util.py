@@ -47,10 +47,10 @@ def rowStochastic(A):
         A NxN numpy array which is row stochastic.
     """
     
-    return A/A.sum(axis=1, keepdims = True)
+    return A / A.sum(axis=1, keepdims = True)
     
     
-def randomSpanningTree(N, rand_weights = False):
+def randomSpanningTree(N, rand_weights=False):
     """Creats a graph of N nodes connected by a random spanning tree.
     
     Args:
@@ -65,8 +65,8 @@ def randomSpanningTree(N, rand_weights = False):
     
     for i in range(1, N):
         w = rand.random() if rand_weights else 1
-        A[nodes[i-1],nodes[i]] = w
-        A[nodes[i],nodes[i-1]] = w
+        A[nodes[i - 1],nodes[i]] = w
+        A[nodes[i],nodes[i - 1]] = w
 
     return A
     
@@ -85,7 +85,7 @@ def meanDegree(A):
     degrees = B.sum(axis=1)
     return np.mean(degrees)
     
-def gnp(N, p, rand_weights = False, verbose = False):
+def gnp(N, p, rand_weights=False, verbose=False):
     """Constructs an undirected connected G(N, p) network with random weights.
     
     Args:
@@ -112,7 +112,7 @@ def gnp(N, p, rand_weights = False, verbose = False):
     return A
     
 
-def plotOpinions(opinions, title='', dcolor = False):
+def plotOpinions(opinions, title='', dcolor=False):
     """Creates a plot of the opinions over time
     
     Args:

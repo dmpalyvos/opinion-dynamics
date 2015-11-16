@@ -3,7 +3,7 @@ import numpy as np
 from numpy.linalg import norm, inv
 from util import *
 
-def deGroot(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True):
+def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     """Simulates the DeGroot Model.
     
     Runs a maximum of max_rounds rounds of the DeGroot model. If the model 
@@ -37,7 +37,7 @@ def deGroot(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True):
     for t in range(0,max_rounds):
         x = np.dot(A, x)
         opinions[t,:] = x
-        if conv_stop and norm(opinions[t-1,:] - opinions[t,:], np.inf) < eps:
+        if conv_stop and norm(opinions[t - 1,:] - opinions[t,:], np.inf) < eps:
             print('DeGroot converged after {t} rounds'.format(t=t))
             break
     
@@ -48,7 +48,7 @@ def deGroot(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True):
     
 
     
-def friedkinJohnsen(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True):
+def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     """Simulates the Friedkin-Johnsen (Kleinberg) Model.
     
     Runs a maximum of max_rounds rounds of the Friedkin-Jonsen model. If the 
@@ -87,7 +87,7 @@ def friedkinJohnsen(A, s, max_rounds, eps = 1e-6, plot = False, conv_stop = True
     for t in range(0, max_rounds):
         x = np.dot(A_model, x) + np.dot(B, s)
         opinions[t,:] = x
-        if conv_stop and norm(opinions[t-1,:] - opinions[t,:], np.inf) < eps:
+        if conv_stop and norm(opinions[t - 1,:] - opinions[t,:], np.inf) < eps:
             print('Friedkin-Johnsen converged after {t} rounds'.format(t=t))
             break
     
@@ -112,4 +112,4 @@ def fjEquilibrium(A, s):
     N = np.shape(A)[0]    
     B = np.diag(np.diag(A))
     
-    return np.dot(inv(np.eye(N)-(A-B)),s)
+    return np.dot(np.dot(inv(np.eye(N) - (A - B)), B), s)
