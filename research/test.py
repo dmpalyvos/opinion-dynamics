@@ -6,8 +6,10 @@ import seaborn
 
 from models import *
 from util import *
-from viz import plotDistance
+from viz import *
 
-N = 1000
+
+N = 30
 s = rand.rand(N)
-hk(s,0.2,50,1e-5,plot=True)
+A = gnp(N, 0, rand_weights=True, stochastic=True)
+meetFriend_nomem(A, s, 1e3, conv_stop=True)

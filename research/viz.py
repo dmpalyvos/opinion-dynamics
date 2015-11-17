@@ -16,7 +16,6 @@ def plotOpinions(opinions, title='', dcolor=False, interp=True):
     '''Creates a plot of the opinions over time
 
     Args:
-
         opinions (txN vector): Vector of the opinions over time
 
         title (string): Optional title of the plot (default: '')
@@ -57,7 +56,6 @@ def plotDistance(A, s, opinions):
     Friedkin-Johnsen model over time.
 
     Args:
-
         A (NxN numpy array): Adjacency Matrix
 
         s (1xN numpy array): Intrinsic beliefs vector
@@ -70,8 +68,7 @@ def plotDistance(A, s, opinions):
     dist = norm(opinions - eq, axis=1)
     plt.plot(range(dist.size), dist)
     plt.xlim(0, dist.size)
-    plt.ylim(np.min(dist), np.max(dist))
-
+    plt.title('Distance from Friedkin-Johnsen Equilibrium')
 
 def colorline(x, y, z=None, cmap=plt.get_cmap('cool'),
               norm=plt.Normalize(0.0, 1.0), linewidth=1, alpha=1.0):
@@ -83,7 +80,6 @@ def colorline(x, y, z=None, cmap=plt.get_cmap('cool'),
     transititons.
 
     Args:
-
         x: The x-coordinates of each point
 
         y: The y-coordinates of each point
