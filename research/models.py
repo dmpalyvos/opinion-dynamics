@@ -4,6 +4,8 @@
 Models of Opinion Formation
 '''
 
+# TODO: numpy copy
+
 from __future__ import division
 
 import numpy as np
@@ -39,7 +41,7 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     '''
     max_rounds = int(max_rounds)
 
-    N = len(s)
+    N = np.size(s)
     max_rounds += 1  # Round 0 contains the initial opinions
     z = s
     opinions = np.zeros((max_rounds, N))
@@ -90,7 +92,7 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     B = np.diag(np.diag(A))  # Stubborness matrix of the model
     A_model = A - B  # Adjacency matrix of the model
 
-    N = len(s)
+    N = np.size(s)
     max_rounds += 1  # Round 0 contains the initial opinions
     z = s
     opinions = np.zeros((max_rounds, N))
@@ -139,7 +141,7 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
     max_rounds = int(max_rounds)
 
-    N = len(s)
+    N = np.size(s)
     max_rounds += 1  # Round 0 contains the initial opinions
     z = s
     z_prev = s
@@ -204,7 +206,7 @@ def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
 
     max_rounds = int(max_rounds)
 
-    N = len(s)
+    N = np.size(s)
     max_rounds += 1  # Round 0 contains the initial opinions
     z = np.copy(s)
     z_prev = np.copy(s)
@@ -257,7 +259,7 @@ def hk(s, op_eps, max_rounds, eps, plot=False, conv_stop=True):
     '''
 
     max_rounds = int(max_rounds)
-    N = len(s)
+    N = np.size(s)
     max_rounds += 1  # Round 0 contains the initial opinions
     z = s
     z_prev = s

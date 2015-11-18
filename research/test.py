@@ -8,6 +8,7 @@ from models import *
 from util import *
 from viz import *
 
+import ipyparallel
 
 N = 30
 s = rand.rand(N)
