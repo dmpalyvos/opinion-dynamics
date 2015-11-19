@@ -236,8 +236,58 @@ def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
     return t, z
 
 
+def dynamic_weights(A, s, z, func='linear', eps=0.1, p=2):
+    '''Creates weighted edges based on the differences of opinions.
+
+    The Generalized Asymmetric model works by using a dynamic weight matrix
+    which is generated in each round. These weights are analogous to the
+    proximity of the intrinsic belief of each node to the opinions of
+    its neighbors.
+
+    Args:
+        A (NxN numpy array): Adjacency matrix (non-weighted)
+
+        s (1xN numpy array): Intrinsic beliefs vector
+
+        z (1xN numpy array): Current opinions vector
+
+        func (string): Choose c function for the model. Possible choices are
+        'simple', 'log', 'pow'. (default: 'linear')
+
+        eps: Used in 'pow' func only
+
+        p: Used in 'pow' func only
+
+    Returns:
+        The NxN matrix representing the weighted graph of the network.
+
+    '''
+
+    N = np.size(s)
+    Q = np.zeros((N, N))
+
+    functionDict = {
+        'linear': lambda dist: 1 - dist,
+        'log': lambda dist: 1 / np.log(dist + np.e),
+        'pow': lambda dist: 1 / np.power(dist+eps, p)
+    }
+
+    cFunc = functionDict[func]
+
+    for i in range(N):
+        dist = np.abs(z - s[i])
+        cResult = cFunc(dist)
+        q = np.zeros(N)
+        neighbors_i = A[i, :] > 0
+        for node in np.flatnonzero(A[i, neighbors_i]):
+            q[node] = cResult[node]/np.sum(cResult[neighbors_i])
+        Q[i, :] = q
+
+    return Q
+
+
 def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
-    '''Simulates the model of Hegselmann-Krause
+    '''Simulates the model of Hegselmann-Krause.
 
     This model does nto require an adjacency matrix. Connections between
     nodes are calculated depending on the proximity of their opinions.
@@ -329,7 +379,7 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
             neighbor_i = A_model[i, :] > 0
             opinion_close = np.abs(z_prev - z_prev[i]) <= op_eps
             # The node listens to those who share a connection with him
-            # in the underlying network and also have an opinion 
+            # in the underlying network and also have an opinion
             # which is close to his own
             friends_i = np.logical_and(neighbor_i, opinion_close)
             z[i] = np.mean(z_prev[friends_i])
