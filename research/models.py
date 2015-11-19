@@ -10,7 +10,7 @@ from __future__ import division, print_function
 import numpy as np
 from numpy.linalg import norm
 from viz import plotOpinions
-from util import rchoice
+from util import rchoice, rowStochastic
 
 
 def preprocessArgs(s, max_rounds):
@@ -236,7 +236,7 @@ def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
     return t, z
 
 
-def dynamic_weights(A, s, z, func='linear', eps=0.1, p=2):
+def dynamic_weights(A, s, z, c, eps, p):
     '''Creates weighted edges based on the differences of opinions.
 
     The Generalized Asymmetric model works by using a dynamic weight matrix
@@ -251,8 +251,8 @@ def dynamic_weights(A, s, z, func='linear', eps=0.1, p=2):
 
         z (1xN numpy array): Current opinions vector
 
-        func (string): Choose c function for the model. Possible choices are
-        'simple', 'log', 'pow'. (default: 'linear')
+        c (string): Choose c function for the model. Possible choices are
+        'simple', 'log', 'pow'.
 
         eps: Used in 'pow' func only
 
@@ -272,7 +272,7 @@ def dynamic_weights(A, s, z, func='linear', eps=0.1, p=2):
         'pow': lambda dist: 1 / np.power(dist+eps, p)
     }
 
-    cFunc = functionDict[func]
+    cFunc = functionDict[c]
 
     for i in range(N):
         dist = np.abs(z - s[i])
@@ -284,6 +284,74 @@ def dynamic_weights(A, s, z, func='linear', eps=0.1, p=2):
         Q[i, :] = q
 
     return Q
+
+
+def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, **kwargs):
+    '''Simulates the Generalized Asymmetric Coevolutionary Game.
+
+    This model does nto require an adjacency matrix. Connections between
+    nodes are calculated depending on the proximity of their opinions.
+
+    Args:
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+        
+        B (NxN numpy array): The stubborness of each node
+        
+        s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
+
+        op_eps: ε parameter of the model
+
+        max_rounds (int): Maximum number of rounds to simulate
+
+        eps (double): Maximum difference between rounds before we assume that
+        the model has converged (default: 1e-6)
+
+        plot (bool): Plot preference (default: False)
+
+        conv_stop (bool): Stop the simulation if the model has converged
+        (default: True)
+
+        **kargs: Arguments c, eps, and p for dynamic_weights function (eps and
+        p need to be specified only if c='pow') (default: c='linear')
+
+    Returns:
+        A txN vector of the opinions of the nodes over time
+
+    '''
+
+    # Check if c function was specified
+    if kwargs:
+        c = kwargs['c']
+        # Extra parameters for pow function
+        eps_c = kwargs.get('eps', 0.1)
+        p_c = kwargs.get('eps', 2)
+    else:
+        # Otherwise use linear as default
+        c = 'linear'
+        eps_c = None
+        p_c = None
+
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
+    opinions = np.zeros((max_rounds, N))
+    opinions[0, :] = s
+
+    for t in range(1, max_rounds):
+        Q = dynamic_weights(A, s, z, c, eps_c, p_c) + B
+        Q = rowStochastic(Q)
+        B_temp = np.diag(np.diag(Q))
+        Q = Q - B_temp
+        z = np.dot(Q, z) + np.dot(B_temp, s)
+        opinions[t, :] = z
+        if conv_stop and \
+           norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
+            print('G-A converged after {t} rounds'.format(t=t))
+            break
+
+    if plot:
+        plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
+
+    return opinions[0:t+1, :]
 
 
 def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
