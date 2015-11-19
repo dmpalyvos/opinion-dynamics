@@ -14,6 +14,20 @@ from viz import plotOpinions
 from util import rchoice
 
 
+def preprocessArgs(s, max_rounds):
+    '''Argument processing common for most models.
+
+    Returns:
+        N, z, max_rounds
+    '''
+
+    N = np.size(s)
+    max_rounds = int(max_rounds) + 1  # Round 0 contains the initial opinions
+    z = s.copy()
+
+    return N, z, max_rounds
+
+
 def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     '''Simulates the DeGroot Model.
 
@@ -39,15 +53,13 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
         A txN vector of the opinions of the nodes over time
 
     '''
-    max_rounds = int(max_rounds)
 
-    N = np.size(s)
-    max_rounds += 1  # Round 0 contains the initial opinions
-    z = s
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(max_rounds):
+    for t in range(1, max_rounds):
         z = np.dot(A, z)
         opinions[t, :] = z
         if conv_stop and \
@@ -56,7 +68,7 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
             break
 
     if plot:
-        plotOpinions(opinions[0:t, :], 'DeGroot')
+        plotOpinions(opinions[0:t+1, :], 'DeGroot')
 
     return opinions
 
@@ -87,18 +99,16 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
         A txN vector of the opinions of the nodes over time
 
     '''
-    max_rounds = int(max_rounds)
+
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
 
     B = np.diag(np.diag(A))  # Stubborness matrix of the model
     A_model = A - B  # Adjacency matrix of the model
 
-    N = np.size(s)
-    max_rounds += 1  # Round 0 contains the initial opinions
-    z = s
     opinions = np.zeros((max_rounds, N))
-    opinions[0, :] = s
+    opinions[0, :] = z
 
-    for t in range(max_rounds):
+    for t in range(1, max_rounds):
         z = np.dot(A_model, z) + np.dot(B, s)
         opinions[t, :] = z
         if conv_stop and \
@@ -107,9 +117,9 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
             break
 
     if plot:
-        plotOpinions(opinions[0:t, :], 'Friedkin-Johnsen')
+        plotOpinions(opinions[0:t+1, :], 'Friedkin-Johnsen')
 
-    return opinions[0:t, :]
+    return opinions[0:t+1, :]
 
 
 def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
@@ -139,19 +149,17 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
     '''
 
-    max_rounds = int(max_rounds)
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
 
-    N = np.size(s)
-    max_rounds += 1  # Round 0 contains the initial opinions
-    z = s
-    z_prev = s
+    z_prev = z.copy()
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
+    # Cannot allow zero rows because rchoice() will fail
     if np.size(np.nonzero(A.sum(axis=1))) != N:
         raise ValueError("Matrix A has one or more zero rows")
 
-    for t in range(max_rounds):
+    for t in range(1, max_rounds):
         # Update the opinion for each node
         for i in range(N):
             r_i = rchoice(A[i, :])
@@ -168,9 +176,9 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
             break
 
     if plot:
-        plotOpinions(opinions[0:t, :], 'Meet a friend')
+        plotOpinions(opinions[0:t+1, :], 'Meet a friend')
 
-    return opinions[0:t, :]
+    return opinions[0:t+1, :]
 
 
 def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
@@ -204,17 +212,14 @@ def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
 
     '''
 
-    max_rounds = int(max_rounds)
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
 
-    N = np.size(s)
-    max_rounds += 1  # Round 0 contains the initial opinions
-    z = np.copy(s)
-    z_prev = np.copy(s)
+    z_prev = z.copy()
 
     if np.size(np.nonzero(A.sum(axis=1))) != N:
         raise ValueError("Matrix A has one or more zero rows")
 
-    for t in range(max_rounds):
+    for t in range(1, max_rounds):
         # Update the opinion for each node
         for i in range(N):
             r_i = rchoice(A[i, :])
@@ -227,12 +232,12 @@ def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
            norm(z - z_prev, np.inf) < eps:
             print('Meet a Friend converged after {t} rounds'.format(t=t))
             break
-        z_prev = np.copy(z)
+        z_prev = z.copy()
 
     return t, z
 
 
-def hk(s, op_eps, max_rounds, eps, plot=False, conv_stop=True):
+def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     '''Simulates the model of Hegselmann-Krause
 
     This model does nto require an adjacency matrix. Connections between
@@ -258,25 +263,24 @@ def hk(s, op_eps, max_rounds, eps, plot=False, conv_stop=True):
 
     '''
 
-    max_rounds = int(max_rounds)
-    N = np.size(s)
-    max_rounds += 1  # Round 0 contains the initial opinions
-    z = s
-    z_prev = s
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
+    z_prev = z.copy()
     opinions = np.zeros((max_rounds, N))
-    for t in range(max_rounds):
-        Q = np.zeros((N, N))
+    opinions[0, :] = s
+
+    for t in range(1, max_rounds):
         for i in range(N):
             neighbors_i = np.abs(z_prev - z_prev[i]) <= op_eps
-            Q[i, neighbors_i] = 1
             z[i] = np.mean(z_prev[neighbors_i])
         opinions[t, :] = z
+        z_prev = z.copy()
         if conv_stop and \
            norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
             print('Hegselmann-Krause converged after {t} rounds'.format(t=t))
             break
 
     if plot:
-        plotOpinions(opinions[0:t, :], 'Hegselmann-Krause', dcolor=True)
+        plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
 
-    return opinions[0:t, :]
+    return opinions[0:t+1, :]
