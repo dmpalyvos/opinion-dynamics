@@ -12,7 +12,21 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from numpy.linalg import norm
 from util import expectedEquilibrium
+import networkx as nx
 
+def plotNetwork(A, s):
+    graph = nx.Graph()
+    N = A.shape[0]
+    graph.add_nodes_from(range(N))
+    for i in range(N):
+        for j in range(N):
+            if A[i, j] > 0:
+                graph.add_edge(i, j, weight=100*A[i, j])
+
+    pos = nx.spring_layout(graph, k=0.2, scale=10.0)
+    # Draw the nodes and edges.
+    nx.draw_networkx_nodes(graph, pos, node_color=255*s, node_size=10, alpha=0.8)
+    nx.draw_networkx_edges(graph, pos, width=0.3, alpha=0.4)
 
 def plotOpinions(opinions, title='', dcolor=False, interp=True):
     '''Creates a plot of the opinions over time
