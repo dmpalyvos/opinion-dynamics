@@ -5,6 +5,8 @@
 Visualization functions
 '''
 
+from __future__ import division, print_function
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -69,6 +71,7 @@ def plotDistance(A, s, opinions):
     plt.plot(range(dist.size), dist)
     plt.xlim(0, dist.size)
     plt.title('Distance from Friedkin-Johnsen Equilibrium')
+
 
 def colorline(x, y, z=None, cmap=plt.get_cmap('cool'),
               norm=plt.Normalize(0.0, 1.0), linewidth=1, alpha=1.0):

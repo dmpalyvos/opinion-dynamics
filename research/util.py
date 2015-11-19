@@ -4,6 +4,8 @@
 '''
 Helper functions
 '''
+from __future__ import division, print_function
+
 import numpy as np
 import numpy.random as rand
 
@@ -96,8 +98,7 @@ def meanDegree(A):
 
 def gnp(N, p, rand_weights=False, stochastic=False, verbose=False):
     '''Constructs an undirected connected G(N, p) network with random weights.
-    
-    
+
     Args:
         N (int): Number of nodes
 

@@ -4,9 +4,8 @@
 Models of Opinion Formation
 '''
 
-# TODO: numpy copy
 
-from __future__ import division
+from __future__ import division, print_function
 
 import numpy as np
 from numpy.linalg import norm
@@ -77,7 +76,7 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     '''Simulates the Friedkin-Johnsen (Kleinberg) Model.
 
     Runs a maximum of max_rounds rounds of the Friedkin-Jonsen model. If the
-    model converges sooner, the function returns. The stubborness matrix of 
+    model converges sooner, the function returns. The stubborness matrix of
     the model is extracted from the diagonal of matrix A.
 
     Args:
@@ -126,7 +125,7 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     '''Simulates the Friedkin-Johnsen (Kleinberg) Model.
 
     Runs a maximum of max_rounds rounds of the "Meeting a Friend" model. If the
-    model converges sooner, the function returns. The stubborness matrix of 
+    model converges sooner, the function returns. The stubborness matrix of
     the model is extracted from the diagonal of matrix A.
 
     Args:
@@ -271,13 +270,75 @@ def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
     for t in range(1, max_rounds):
         for i in range(N):
-            neighbors_i = np.abs(z_prev - z_prev[i]) <= op_eps
-            z[i] = np.mean(z_prev[neighbors_i])
+            # The node chooses only those with a close enough opinion
+            friends_i = np.abs(z_prev - z_prev[i]) <= op_eps
+            z[i] = np.mean(z_prev[friends_i])
         opinions[t, :] = z
         z_prev = z.copy()
         if conv_stop and \
            norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
             print('Hegselmann-Krause converged after {t} rounds'.format(t=t))
+            break
+
+    if plot:
+        plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
+
+    return opinions[0:t+1, :]
+
+
+def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
+    '''Simulates the model of Hegselmann-Krause with an Adjacency Matrix
+
+    Contraray to the standard Hegselmann-Krause Model, here we make use of
+    an adjacency matrix that represents an underlying social structure
+    independent of the opinions held by the members of the society.
+
+    Args:
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+
+        s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
+
+        op_eps: ε parameter of the model
+
+        max_rounds (int): Maximum number of rounds to simulate
+
+        eps (double): Maximum difference between rounds before we assume that
+        the model has converged (default: 1e-6)
+
+        plot (bool): Plot preference (default: False)
+
+        conv_stop (bool): Stop the simulation if the model has converged
+        (default: True)
+
+    Returns:
+        A txN vector of the opinions of the nodes over time
+
+    '''
+
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
+    # All nodes must listen to themselves for the averaging to work
+    A_model = A + np.eye(N)
+    z_prev = z.copy()
+    opinions = np.zeros((max_rounds, N))
+    opinions[0, :] = s
+
+    for t in range(1, max_rounds):
+        for i in range(N):
+            # Neighbors in the underlying social network
+            neighbor_i = A_model[i, :] > 0
+            opinion_close = np.abs(z_prev - z_prev[i]) <= op_eps
+            # The node listens to those who share a connection with him
+            # in the underlying network and also have an opinion 
+            # which is close to his own
+            friends_i = np.logical_and(neighbor_i, opinion_close)
+            z[i] = np.mean(z_prev[friends_i])
+        opinions[t, :] = z
+        z_prev = z.copy()
+        if conv_stop and \
+           norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
+            print('Hegselmann-Krause (Local Knowledge) converged after {t} \
+            rounds'.format(t=t))
             break
 
     if plot:
