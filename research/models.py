@@ -320,7 +320,7 @@ def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, **kwargs):
     '''
 
     # Check if c function was specified
-    if kwargs:
+    if kwargs is not None:
         c = kwargs['c']
         # Extra parameters for pow function
         eps_c = kwargs.get('eps', 0.1)

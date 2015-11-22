@@ -8,8 +8,11 @@ from __future__ import division, print_function
 
 import numpy as np
 import numpy.random as rand
+import json
+import os
 
 from numpy.linalg import inv
+from datetime import datetime
 
 
 def rchoice(weights):
@@ -147,3 +150,51 @@ def expectedEquilibrium(A, s):
     B = np.diag(np.diag(A))
 
     return np.dot(np.dot(inv(np.eye(N) - (A - B)), B), s)
+
+
+def saveData(simid, N, max_rounds, eps, conv_stop, **kwargs):
+    '''Save the initial conditions and the results of a simulation
+
+    Args:
+        simid (string): Unique simulation id starting with the name
+        of the model and followed by a unique number
+
+        N (int): Number of nodes
+
+        max_rounds (int): Maximum number of rounds
+
+        eps (float): Limit of convergence for the simulation
+
+        conv_stop (bool): Specify whether the simulation stopped when the
+        model converged
+
+        **kwargs: Important arrays of the simulation that need to be saved.
+        Those depend on the model but generally should contain the initial
+        opinions, the opinions over time, the adjacency matrix etc. The names
+        of the files are determined by the name of each dictionary entry so
+        try to keep these consistent.
+
+    '''
+
+    # Various non-essential info about the simulation
+    metadata = {
+        'N': N,
+        'max_rounds': max_rounds,
+        'eps': eps,
+        'conv_stop': conv_stop,
+        'time': str(datetime.now())
+    }
+
+    filename = '{0}_metadata.txt'.format(simid)
+    if os.path.isfile(filename):
+        print('Files for simulation {0} already exist. Will'.format(simid),
+              'append "_duplicate" string to results. Please change file'
+              'names by hand.')
+        simid += '_duplicate'
+    with open(filename, 'w') as metadata_file:
+        json.dump(metadata, metadata_file)
+
+    # Save the arrays used in the simulation
+    for name, array in kwargs.iteritems():
+        np.savetxt('{simid}_{name}.txt'.format(simid=simid, name=name), array,
+                   fmt='%6.4f')
