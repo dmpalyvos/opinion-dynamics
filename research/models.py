@@ -9,8 +9,10 @@ from __future__ import division, print_function
 
 import numpy as np
 from numpy.linalg import norm
+from datetime import datetime
+
 from viz import plotOpinions
-from util import rchoice, rowStochastic
+from util import rchoice, rowStochastic, saveModelData
 
 
 def preprocessArgs(s, max_rounds):
@@ -27,7 +29,8 @@ def preprocessArgs(s, max_rounds):
     return N, z, max_rounds
 
 
-def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
+def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True,
+            save=False):
     '''Simulates the DeGroot Model.
 
     Runs a maximum of max_rounds rounds of the DeGroot model. If the model
@@ -47,6 +50,8 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
         conv_stop (bool): Stop the simulation if the model has converged
         (default: True)
+
+        save (bool): Save the simulation data into text files
 
     Returns:
         A txN vector of the opinions of the nodes over time
@@ -69,10 +74,18 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     if plot:
         plotOpinions(opinions[0:t+1, :], 'DeGroot')
 
-    return opinions
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'dg' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, A=A, s=s,
+                      opinions=opinions[0:t+1, :])
+
+    return opinions[0:t+1, :]
 
 
-def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
+def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True,
+                    save=False):
     '''Simulates the Friedkin-Johnsen (Kleinberg) Model.
 
     Runs a maximum of max_rounds rounds of the Friedkin-Jonsen model. If the
@@ -93,6 +106,8 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
         conv_stop (bool): Stop the simulation if the model has converged
         (default: True)
+
+        save (bool): Save the simulation data into text files
 
     Returns:
         A txN vector of the opinions of the nodes over time
@@ -118,10 +133,18 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     if plot:
         plotOpinions(opinions[0:t+1, :], 'Friedkin-Johnsen')
 
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'fj' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, A=A, s=s,
+                      opinions=opinions[0:t+1, :])
+
     return opinions[0:t+1, :]
 
 
-def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
+def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True,
+               save=False):
     '''Simulates the Friedkin-Johnsen (Kleinberg) Model.
 
     Runs a maximum of max_rounds rounds of the "Meeting a Friend" model. If the
@@ -142,6 +165,9 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
         conv_stop (bool): Stop the simulation if the model has converged
         (default: True)
+
+        save (bool): Save the simulation data into text files
+
 
     Returns:
         A txN vector of the opinions of the nodes over time
@@ -176,6 +202,13 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
     if plot:
         plotOpinions(opinions[0:t+1, :], 'Meet a friend')
+
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'mf' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, A=A, s=s,
+                      opinions=opinions[0:t+1, :])
 
     return opinions[0:t+1, :]
 
@@ -286,7 +319,8 @@ def dynamic_weights(A, s, z, c, eps, p):
     return Q
 
 
-def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, **kwargs):
+def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, save=False,
+       **kwargs):
     '''Simulates the Generalized Asymmetric Coevolutionary Game.
 
     This model does nto require an adjacency matrix. Connections between
@@ -294,9 +328,9 @@ def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, **kwargs):
 
     Args:
         A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
-        
+
         B (NxN numpy array): The stubborness of each node
-        
+
         s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
 
         op_eps: ε parameter of the model
@@ -320,7 +354,7 @@ def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, **kwargs):
     '''
 
     # Check if c function was specified
-    if kwargs is not None:
+    if kwargs:
         c = kwargs['c']
         # Extra parameters for pow function
         eps_c = kwargs.get('eps', 0.1)
@@ -351,10 +385,18 @@ def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, **kwargs):
     if plot:
         plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
 
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'ga' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, A=A, s=s, B=B, c=c, eps_c=eps_c,
+                      p_c=p_c, opinions=opinions[0:t+1, :])
+
     return opinions[0:t+1, :]
 
 
-def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
+def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
+       save=False):
     '''Simulates the model of Hegselmann-Krause.
 
     This model does nto require an adjacency matrix. Connections between
@@ -401,10 +443,18 @@ def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
     if plot:
         plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
 
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'hk' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, s=s, op_eps=op_eps,
+                      opinions=opinions[0:t+1, :])
+
     return opinions[0:t+1, :]
 
 
-def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
+def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
+             save=False):
     '''Simulates the model of Hegselmann-Krause with an Adjacency Matrix
 
     Contraray to the standard Hegselmann-Krause Model, here we make use of
@@ -461,5 +511,12 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True):
 
     if plot:
         plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
+
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'hkloc' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, A=A, s=s, op_eps=op_eps,
+                      opinions=opinions[0:t+1, :])
 
     return opinions[0:t+1, :]
