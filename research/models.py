@@ -10,6 +10,7 @@ from __future__ import division, print_function
 import numpy as np
 from numpy.linalg import norm
 from datetime import datetime
+from numba import autojit
 
 from viz import plotOpinions
 from util import rchoice, rowStochastic, saveModelData
@@ -512,7 +513,7 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
         if conv_stop and \
            norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
             print('Hegselmann-Krause (Local Knowledge) converged after {t} '
-            'rounds'.format(t=t))
+                  'rounds'.format(t=t))
             break
 
     if plot:
@@ -528,10 +529,11 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     return opinions[0:t+1, :]
 
 
-def kNN(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True, save=False):
-    '''Simulates the K-Nearest Neighbors Model.
+def kNN_static(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True,
+               save=False):
+    '''Simulates the static K-Nearest Neighbors Model.
 
-    In this model, each nodes chooses his K-Nearest Neighbors during the
+    In this model, each node chooses his K-Nearest Neighbors during the
     averaging of his opinion.
 
     Args:
@@ -569,23 +571,28 @@ def kNN(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True, save=False):
 
     for t in range(1, max_rounds):
         for i in range(N):
-            # Neighbors in the underlying social network
+            # Find neighbors in the underlying social network
             neighbor_i = A_model[i, :] > 0
+            # Sort the nodes by opinion distance
             sorted_dist = np.argsort(abs(z_prev - z_prev[i]))
+            # Change the order of the logican neighbor_i array
             neighbor_i = neighbor_i[sorted_dist]
+            # Keep only sorted neighbors
             friends_i = sorted_dist[neighbor_i]
+            # In case that we have less than K friends numpy
+            # will return the whole array (< K elements)
             k_nearest = friends_i[0:K]
             z[i] = np.mean(z_prev[k_nearest])
         opinions[t, :] = z
         z_prev = z.copy()
         if conv_stop and \
            norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
-            print('K-Nearest Neighbors converged after {t} '
+            print('K-Nearest Neighbors (static) converged after {t} '
                   'rounds'.format(t=t))
             break
 
     if plot:
-        plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
+        plotOpinions(opinions[0:t+1, :], 'K-NN Static', dcolor=True)
 
     if save:
         timeStr = datetime.now().strftime("%m%d%H%M")
@@ -597,8 +604,8 @@ def kNN(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True, save=False):
     return opinions[0:t+1, :]
 
 
-def kNN_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
-    '''Simulates the K-Nearest Neighbors Model. Reduced memory usage.
+def kNN_static_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
+    '''Simulates the static K-Nearest Neighbors Model. Reduced memory usage.
 
     In this model, each nodes chooses his K-Nearest Neighbors during the
     averaging of his opinion. This variant does not store the intermediate
@@ -634,16 +641,170 @@ def kNN_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
 
     for t in range(1, max_rounds):
         for i in range(N):
-            # Neighbors in the underlying social network
+            # Find neighbors in the underlying social network
             neighbor_i = A_model[i, :] > 0
+            # Sort the nodes by opinion distance
             sorted_dist = np.argsort(abs(z_prev - z_prev[i]))
+            # Change the order of the logican neighbor_i array
             neighbor_i = neighbor_i[sorted_dist]
+            # Keep only sorted neighbors
             friends_i = sorted_dist[neighbor_i]
+            # In case that we have less than K friends numpy
+            # will return the whole array (< K elements)
             k_nearest = friends_i[0:K]
             z[i] = np.mean(z_prev[k_nearest])
         if conv_stop and \
            norm(z - z_prev, np.inf) < eps:
-            print('K-Nearest Neighbors converged after {t} '
+            print('K-Nearest Neighbors (static) converged after {t} '
+                  'rounds'.format(t=t))
+            break
+        z_prev = z.copy()
+
+    return t, z
+
+
+def kNN_dynamic(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True,
+                save=False):
+    '''Simulates the dynamic K-Nearest Neighbors Model.
+
+    In this model, each nodes chooses his K-Nearest Neighbors during the
+    averaging of his opinion. The adjacency matrix changes between rounds
+    depending on the opinions.
+
+    Args:
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+
+        s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
+
+        K (int): The number of the nearest neighbors to listen to
+
+        max_rounds (int): Maximum number of rounds to simulate
+
+        eps (double): Maximum difference between rounds before we assume that
+        the model has converged (default: 1e-6)
+
+        plot (bool): Plot preference (default: False)
+
+        conv_stop (bool): Stop the simulation if the model has converged
+        (default: True)
+
+        save (bool): Save the simulation data into text files
+
+    Returns:
+        A txN vector of the opinions of the nodes over time
+
+    '''
+
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
+    # All nodes must listen to themselves for the averaging to work
+    A_model = A + np.eye(N)
+
+    z_prev = z.copy()
+    opinions = np.zeros((max_rounds, N))
+    opinions[0, :] = s
+
+    for t in range(1, max_rounds):
+        Q = np.zeros((N, N))
+        # TODO: Verify that this contains the original paths of A
+        A_squared = np.dot(A_model, A_model)
+        for i in range(N):
+            # Find 2-neighbors in the underlying social network
+            neighbor2_i = A_squared[i, :] > 0
+            # Sort the nodes by opinion distance
+            sorted_dist = np.argsort(abs(z_prev - z_prev[i]))
+            # Change the order of the logican neighbor2_i array
+            neighbor2_i = neighbor2_i[sorted_dist]
+            # Keep only sorted neighbors
+            friends_i = sorted_dist[neighbor2_i]
+            # In case that we have less than K friends numpy
+            # will return the whole array (< K elements)
+            k_nearest = friends_i[0:K]
+            Q[i, k_nearest] = 1/k_nearest.size
+            z[i] = np.mean(z_prev[k_nearest])
+        A_model = Q.copy()
+        opinions[t, :] = z
+        z_prev = z.copy()
+        if conv_stop and \
+           norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
+            print('K-Nearest Neighbors (dynamic) converged after {t} '
+                  'rounds'.format(t=t))
+            break
+
+    if plot:
+        plotOpinions(opinions[0:t+1, :], 'K-NN Dynamic', dcolor=True)
+
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'kNNd' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, A=A, s=s, K=K,
+                      opinions=opinions[0:t+1, :])
+
+    return opinions[0:t+1, :]
+
+
+@autojit
+def kNN_dynamic_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
+    '''Simulates the dynamic K-Nearest Neighbors Model. Reduced Memory.
+
+    In this model, each nodes chooses his K-Nearest Neighbors during the
+    averaging of his opinion. Opinions over time are not saved.
+
+    Args:
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+
+        s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
+
+        K (int): The number of the nearest neighbors to listen to
+
+        max_rounds (int): Maximum number of rounds to simulate
+
+        eps (double): Maximum difference between rounds before we assume that
+        the model has converged (default: 1e-6)
+
+        plot (bool): Plot preference (default: False)
+
+        conv_stop (bool): Stop the simulation if the model has converged
+        (default: True)
+
+        save (bool): Save the simulation data into text files
+
+    Returns:
+        t, z where t is the convergence time and z the vector of the
+        final opinions.
+
+    '''
+
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
+    # All nodes must listen to themselves for the averaging to work
+    A_model = A + np.eye(N)
+
+    z_prev = z.copy()
+
+    for t in range(1, max_rounds):
+        Q = np.zeros((N, N))
+        # TODO: Verify that this contains the original paths of A
+        A_squared = np.dot(A_model, A_model)
+        for i in range(N):
+            # Find 2-neighbors in the underlying social network
+            neighbor2_i = A_squared[i, :] > 0
+            # Sort the nodes by opinion distance
+            sorted_dist = np.argsort(abs(z_prev - z_prev[i]))
+            # Change the order of the logican neighbor2_i array
+            neighbor2_i = neighbor2_i[sorted_dist]
+            # Keep only sorted neighbors
+            friends_i = sorted_dist[neighbor2_i]
+            # In case that we have less than K friends numpy
+            # will return the whole array (< K elements)
+            k_nearest = friends_i[0:K]
+            Q[i, k_nearest] = 1/k_nearest.size
+            z[i] = np.mean(z_prev[k_nearest])
+        A_model = Q.copy()
+        if conv_stop and \
+           norm(z - z_prev, np.inf) < eps:
+            print('K-Nearest Neighbors (dynamic) converged after {t} '
                   'rounds'.format(t=t))
             break
         z_prev = z.copy()
