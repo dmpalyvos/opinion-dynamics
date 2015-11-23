@@ -57,7 +57,7 @@ def plotOpinions(opinions, title='', dcolor=False, interp=True):
         if dcolor:
             # If small number of rounds, increase the points
             # for a smoother plot
-            if interp:
+            if interp and max_rounds < 100:
                 (x, y) = interpolatePoints(x, y, factor=4)
             colorline(x, y, z=y)
         else:

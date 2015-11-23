@@ -168,7 +168,6 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True,
 
         save (bool): Save the simulation data into text files
 
-
     Returns:
         A txN vector of the opinions of the nodes over time
 
@@ -239,7 +238,7 @@ def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
         (default: True)
 
     Returns:
-        A tuple (t,z) where t is the convergence time and z the vector of the
+        t, z where t is the convergence time and z the vector of the
         final opinions.
 
     '''
@@ -345,6 +344,8 @@ def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, save=False,
         conv_stop (bool): Stop the simulation if the model has converged
         (default: True)
 
+        save (bool): Save the simulation data into text files
+
         **kargs: Arguments c, eps, and p for dynamic_weights function (eps and
         p need to be specified only if c='pow') (default: c='linear')
 
@@ -417,6 +418,8 @@ def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
         conv_stop (bool): Stop the simulation if the model has converged
         (default: True)
 
+        save (bool): Save the simulation data into text files
+
     Returns:
         A txN vector of the opinions of the nodes over time
 
@@ -457,7 +460,7 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
              save=False):
     '''Simulates the model of Hegselmann-Krause with an Adjacency Matrix
 
-    Contraray to the standard Hegselmann-Krause Model, here we make use of
+    Contrary to the standard Hegselmann-Krause Model, here we make use of
     an adjacency matrix that represents an underlying social structure
     independent of the opinions held by the members of the society.
 
@@ -478,6 +481,8 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
         conv_stop (bool): Stop the simulation if the model has converged
         (default: True)
 
+        save (bool): Save the simulation data into text files
+
     Returns:
         A txN vector of the opinions of the nodes over time
 
@@ -487,6 +492,7 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
 
     # All nodes must listen to themselves for the averaging to work
     A_model = A + np.eye(N)
+
     z_prev = z.copy()
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
@@ -505,8 +511,8 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
         z_prev = z.copy()
         if conv_stop and \
            norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
-            print('Hegselmann-Krause (Local Knowledge) converged after {t} \
-            rounds'.format(t=t))
+            print('Hegselmann-Krause (Local Knowledge) converged after {t} '
+            'rounds'.format(t=t))
             break
 
     if plot:
@@ -520,3 +526,126 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
                       opinions=opinions[0:t+1, :])
 
     return opinions[0:t+1, :]
+
+
+def kNN(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True, save=False):
+    '''Simulates the K-Nearest Neighbors Model.
+
+    In this model, each nodes chooses his K-Nearest Neighbors during the
+    averaging of his opinion.
+
+    Args:
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+
+        s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
+
+        K (int): The number of the nearest neighbors to listen to
+
+        max_rounds (int): Maximum number of rounds to simulate
+
+        eps (double): Maximum difference between rounds before we assume that
+        the model has converged (default: 1e-6)
+
+        plot (bool): Plot preference (default: False)
+
+        conv_stop (bool): Stop the simulation if the model has converged
+        (default: True)
+
+        save (bool): Save the simulation data into text files
+
+    Returns:
+        A txN vector of the opinions of the nodes over time
+
+    '''
+
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
+    # All nodes must listen to themselves for the averaging to work
+    A_model = A + np.eye(N)
+
+    z_prev = z.copy()
+    opinions = np.zeros((max_rounds, N))
+    opinions[0, :] = s
+
+    for t in range(1, max_rounds):
+        for i in range(N):
+            # Neighbors in the underlying social network
+            neighbor_i = A_model[i, :] > 0
+            sorted_dist = np.argsort(abs(z_prev - z_prev[i]))
+            neighbor_i = neighbor_i[sorted_dist]
+            friends_i = sorted_dist[neighbor_i]
+            k_nearest = friends_i[0:K]
+            z[i] = np.mean(z_prev[k_nearest])
+        opinions[t, :] = z
+        z_prev = z.copy()
+        if conv_stop and \
+           norm(opinions[t - 1, :] - opinions[t, :], np.inf) < eps:
+            print('K-Nearest Neighbors converged after {t} '
+                  'rounds'.format(t=t))
+            break
+
+    if plot:
+        plotOpinions(opinions[0:t+1, :], 'Hegselmann-Krause', dcolor=True)
+
+    if save:
+        timeStr = datetime.now().strftime("%m%d%H%M")
+        simid = 'kNNs' + timeStr
+        saveModelData(simid, N=N, max_rounds=max_rounds, eps=eps,
+                      rounds_run=t+1, A=A, s=s, K=K,
+                      opinions=opinions[0:t+1, :])
+
+    return opinions[0:t+1, :]
+
+
+def kNN_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
+    '''Simulates the K-Nearest Neighbors Model. Reduced memory usage.
+
+    In this model, each nodes chooses his K-Nearest Neighbors during the
+    averaging of his opinion. This variant does not store the intermediate
+    opinions and as a result uses much less memory.
+
+    Args:
+        A (NxN numpy array): Adjacency matrix (its diagonal is the stubborness)
+
+        s (1xN numpy array): Initial opinions (intrinsic beliefs) vector
+
+        K (int): The number of the nearest neighbors to listen to
+
+        max_rounds (int): Maximum number of rounds to simulate
+
+        eps (double): Maximum difference between rounds before we assume that
+        the model has converged (default: 1e-6)
+
+        conv_stop (bool): Stop the simulation if the model has converged
+        (default: True)
+
+    Returns:
+        t, z where t is the convergence time and z the vector of the
+        final opinions.
+
+    '''
+
+    N, z, max_rounds = preprocessArgs(s, max_rounds)
+
+    # All nodes must listen to themselves for the averaging to work
+    A_model = A + np.eye(N)
+
+    z_prev = z.copy()
+
+    for t in range(1, max_rounds):
+        for i in range(N):
+            # Neighbors in the underlying social network
+            neighbor_i = A_model[i, :] > 0
+            sorted_dist = np.argsort(abs(z_prev - z_prev[i]))
+            neighbor_i = neighbor_i[sorted_dist]
+            friends_i = sorted_dist[neighbor_i]
+            k_nearest = friends_i[0:K]
+            z[i] = np.mean(z_prev[k_nearest])
+        if conv_stop and \
+           norm(z - z_prev, np.inf) < eps:
+            print('K-Nearest Neighbors converged after {t} '
+                  'rounds'.format(t=t))
+            break
+        z_prev = z.copy()
+
+    return t, z
