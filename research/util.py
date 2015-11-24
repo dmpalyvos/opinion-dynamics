@@ -8,6 +8,7 @@ from __future__ import division, print_function
 
 import numpy as np
 import numpy.random as rand
+import networkx as nx
 import json
 import os
 
@@ -99,8 +100,12 @@ def meanDegree(A):
     return np.mean(degrees)
 
 
-def gnp(N, p, rand_weights=False, verbose=False):
-    '''Constructs an undirected connected G(N, p) network with random weights.
+def gnp(N, p, rand_weights=False, verbose=True):
+    '''Constructs an connected undirected  G(N, p) network with random weights.
+    
+    To ensure connectivity, we begin by creating a random spanning tree on the
+    nodes. Afterwards we proceed by adding nodes like we would on a classic
+    Erdos-Renyi network.
 
     Args:
         N (int): Number of nodes
@@ -116,6 +121,7 @@ def gnp(N, p, rand_weights=False, verbose=False):
 
     Returns:
         A NxN numpy array representing the adjacency matrix of the graph.
+
     '''
 
     A = randomSpanningTree(N)
@@ -133,6 +139,34 @@ def gnp(N, p, rand_weights=False, verbose=False):
 
     if rand_weights:
         A = rowStochastic(A)
+
+    return A
+
+
+def barabasi_albert(N, M, seed, verbose=True):
+    '''Create random graph using Barabási-Albert preferential attachment model.
+
+    A graph of N nodes is grown by attaching new nodes each with M edges that
+    are preferentially attached to existing nodes with high degree.
+
+    Args:
+        N (int):Number of nodes
+
+        M (int):Number of edges to attach from a new node to existing nodes
+
+        seed (int) Seed for random number generator
+
+    Returns:
+        The NxN adjacency matrix of the network as a numpy array.
+
+    '''
+
+    A_nx = nx.barabasi_albert_graph(N, M, seed=seed)
+    A = np.array(nx.adj_matrix(A_nx))
+
+    if verbose:
+        print('Barbasi-Albert Network Created: N = {N}, '
+              'Mean Degree = {deg}'.format(N=N, deg=meanDegree(A)))
 
     return A
 

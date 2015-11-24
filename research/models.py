@@ -10,7 +10,6 @@ from __future__ import division, print_function
 import numpy as np
 from numpy.linalg import norm
 from datetime import datetime
-from numba import autojit
 
 from viz import plotOpinions
 from util import rchoice, rowStochastic, saveModelData
@@ -744,7 +743,6 @@ def kNN_dynamic(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     return opinions[0:t+1, :]
 
 
-@autojit
 def kNN_dynamic_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
     '''Simulates the dynamic K-Nearest Neighbors Model. Reduced Memory.
 
