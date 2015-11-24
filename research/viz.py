@@ -15,7 +15,7 @@ from util import expectedEquilibrium
 import networkx as nx
 
 
-def plotNetwork(A, s):
+def plotNetwork(A, s, k=0.2, node_size=20):
     '''Plot the network graph. Not final yet.
     '''
     graph = nx.Graph()
@@ -26,10 +26,14 @@ def plotNetwork(A, s):
             if A[i, j] > 0:
                 graph.add_edge(i, j, weight=100*A[i, j])
 
-    pos = nx.spring_layout(graph, k=0.2, scale=10.0)
-    # Draw the nodes and edges.
-    nx.draw_networkx_nodes(graph, pos, node_color=255*s, node_size=10, alpha=0.8)
+    pos = nx.spring_layout(graph, k=k, scale=1.0, iterations=500)
+    # Draw the nodes and edges
+    print(s.min(), s.max())
+    nx.draw_networkx_nodes(graph, pos, node_color=s, vmin=0, vmax=1,
+                           node_size=node_size, alpha=0.8, cmap=plt.cm.cool)
+
     nx.draw_networkx_edges(graph, pos, width=0.3, alpha=0.4)
+    plt.show()
 
 
 def plotOpinions(opinions, title='', dcolor=False, interp=True):
