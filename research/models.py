@@ -13,6 +13,7 @@ from datetime import datetime
 
 from viz import plotOpinions
 from util import rchoice, rowStochastic, saveModelData
+from tqdm import tqdm, trange
 
 
 def preprocessArgs(s, max_rounds):
@@ -63,7 +64,7 @@ def deGroot(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         z = np.dot(A, z)
         opinions[t, :] = z
         if conv_stop and \
@@ -122,7 +123,7 @@ def friedkinJohnsen(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = z
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         z = np.dot(A_model, z) + np.dot(B, s)
         opinions[t, :] = z
         if conv_stop and \
@@ -183,7 +184,7 @@ def meetFriend(A, s, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     if np.size(np.nonzero(A.sum(axis=1))) != N:
         raise ValueError("Matrix A has one or more zero rows")
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         # Update the opinion for each node
         for i in range(N):
             r_i = rchoice(A[i, :])
@@ -250,7 +251,7 @@ def meetFriend_nomem(A, s, max_rounds, eps=1e-6, conv_stop=True):
     if np.size(np.nonzero(A.sum(axis=1))) != N:
         raise ValueError("Matrix A has one or more zero rows")
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         # Update the opinion for each node
         for i in range(N):
             r_i = rchoice(A[i, :])
@@ -371,7 +372,7 @@ def ga(A, B, s, max_rounds, eps=1e-6, plot=False, conv_stop=True, save=False,
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         Q = dynamic_weights(A, s, z, c, eps_c, p_c) + B
         Q = rowStochastic(Q)
         B_temp = np.diag(np.diag(Q))
@@ -431,7 +432,7 @@ def hk(s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         for i in range(N):
             # The node chooses only those with a close enough opinion
             friends_i = np.abs(z_prev - z_prev[i]) <= op_eps
@@ -497,7 +498,7 @@ def hk_local(A, s, op_eps, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         for i in range(N):
             # Neighbors in the underlying social network
             neighbor_i = A_model[i, :] > 0
@@ -567,7 +568,7 @@ def hk_local_nomem(A, s, op_eps, max_rounds, eps=1e-6, conv_stop=True):
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         for i in range(N):
             # Neighbors in the underlying social network
             neighbor_i = A_model[i, :] > 0
@@ -628,7 +629,7 @@ def kNN_static(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         for i in range(N):
             # Find neighbors in the underlying social network
             neighbor_i = A_model[i, :] > 0
@@ -698,7 +699,7 @@ def kNN_static_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
 
     z_prev = z.copy()
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         for i in range(N):
             # Find neighbors in the underlying social network
             neighbor_i = A_model[i, :] > 0
@@ -763,7 +764,7 @@ def kNN_dynamic(A, s, K, max_rounds, eps=1e-6, plot=False, conv_stop=True,
     opinions = np.zeros((max_rounds, N))
     opinions[0, :] = s
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         Q = np.zeros((N, N))
         # TODO: Verify that this contains the original paths of A
         A_squared = np.dot(A_model, A_model)
@@ -841,7 +842,7 @@ def kNN_dynamic_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
 
     z_prev = z.copy()
 
-    for t in range(1, max_rounds):
+    for t in trange(1, max_rounds):
         Q = np.zeros((N, N))
         # TODO: Verify that this contains the original paths of A
         A_squared = np.dot(A_model, A_model)
