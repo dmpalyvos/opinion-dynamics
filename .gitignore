@@ -2,3 +2,5 @@
 .*
 !.gitignore
 *.txt
+research/networks
+research/results

@@ -13,11 +13,13 @@ from matplotlib.collections import LineCollection
 from numpy.linalg import norm
 from util import expectedEquilibrium
 import networkx as nx
+import seaborn as sns
 
 
-def plotNetwork(A, s, k=0.2, node_size=20):
+def plotNetwork(A, s, k=0.2, node_size=40, iterations=500):
     '''Plot the network graph. Not final yet.
     '''
+
     graph = nx.Graph()
     N = A.shape[0]
     graph.add_nodes_from(range(N))
@@ -26,14 +28,15 @@ def plotNetwork(A, s, k=0.2, node_size=20):
             if A[i, j] > 0:
                 graph.add_edge(i, j, weight=100*A[i, j])
 
-    pos = nx.spring_layout(graph, k=k, scale=1.0, iterations=500)
+    pos = nx.spring_layout(graph, k=k, scale=1.0, iterations=iterations)
     # Draw the nodes and edges
-    print(s.min(), s.max())
-    nx.draw_networkx_nodes(graph, pos, node_color=s, vmin=0, vmax=1,
-                           node_size=node_size, alpha=0.8, cmap=plt.cm.cool)
-
-    nx.draw_networkx_edges(graph, pos, width=0.3, alpha=0.4)
-    plt.show()
+    with sns.axes_style('white'):
+        sns.despine()
+        nx.draw_networkx_nodes(graph, pos, node_color=s, vmin=0, vmax=1,
+                               node_size=node_size, alpha=0.8, cmap=plt.cm.cool)
+    
+        nx.draw_networkx_edges(graph, pos, width=0.3, alpha=0.4)
+        plt.show()
 
 
 def plotOpinions(opinions, title='', dcolor=False, interp=True):

@@ -102,7 +102,7 @@ def meanDegree(A):
 
 def gnp(N, p, rand_weights=False, verbose=True):
     '''Constructs an connected undirected  G(N, p) network with random weights.
-    
+
     To ensure connectivity, we begin by creating a random spanning tree on the
     nodes. Afterwards we proceed by adding nodes like we would on a classic
     Erdos-Renyi network.
@@ -169,6 +169,30 @@ def barabasi_albert(N, M, seed, verbose=True):
               'Mean Degree = {deg}'.format(N=N, deg=meanDegree(A)))
 
     return A
+
+
+def from_edgelist(path, delimiter=' '):
+    '''Read a graph from an edgelist like those provided by Stanford's snap.
+
+    An edgelist is a simple text file in which each line contains the ids of
+    two nodes connected by an edge.
+
+    Args:
+        path (string): The path of the edgelist file.
+
+        delimiter (string): The string used to separate values. Default is
+        whitespace.
+
+    Returns:
+        A, N where A is the NxN Adjacency matrix of the graph and N is the
+        number of nodes
+
+    '''
+
+    G = nx.read_edgelist(path, delimiter=delimiter, nodetype=int)
+    A = np.array(nx.adj_matrix(G))
+    N = A.shape[0]
+    return A, N
 
 
 def expectedEquilibrium(A, s):

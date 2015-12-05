@@ -769,8 +769,8 @@ def kNN_dynamic_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
         save (bool): Save the simulation data into text files
 
     Returns:
-        t, z where t is the convergence time and z the vector of the
-        final opinions.
+        t, z, Q where t is the convergence time, z the vector of the
+        final opinions and Q the final adjacency matrix of the network
 
     '''
 
@@ -807,4 +807,4 @@ def kNN_dynamic_nomem(A, s, K, max_rounds, eps=1e-6, conv_stop=True):
             break
         z_prev = z.copy()
 
-    return t, z
+    return t, z, Q
