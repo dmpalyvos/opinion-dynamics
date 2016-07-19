@@ -11,9 +11,9 @@ import numpy as np
 from numpy.linalg import norm
 from datetime import datetime
 
-from viz import plotOpinions
 from util import rchoice, rowStochastic, saveModelData
-from tqdm import tqdm, trange
+from tqdm import trange
+from viz import plotOpinions
 
 
 def preprocessArgs(s, max_rounds):

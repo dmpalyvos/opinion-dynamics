@@ -4,7 +4,7 @@ Diploma thesis at the National Technical University of Athens on Opinion Dynamic
 
 ## Contents
 1. thesis-matlab: Code used in the thesis, written in matlab.
-2. reaseach: base for python code used in later research. Saved here in order to preserve the history. Recent versions of the code please can be found [here](https://github.com/dmpalyvos/opinions-research).
+2. reaseach: base for python code used in later research. Saved here in order to preserve the history. **Updated versions of the code can be found [here](https://github.com/dmpalyvos/opinions-research).**
 
 ## Summary
 Opinions are important for both our personal lives and society as a whole. They are formed during a social learning process in which people use their social network to exchange useful information about the world. This dynamic process is described by several mathematical models that define how the opinions and the network behave over time. Those models can be separated into two distinct categories.
